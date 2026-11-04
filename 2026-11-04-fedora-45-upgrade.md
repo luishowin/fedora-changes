@@ -2,6 +2,10 @@
 
 **Partial** as of 2026-11-04. The user-side cleanup is done; the sudo half is listed at the end.
 
+**Revised 2026-11-04:** the first sudo pass found the `kernel` meta-packages already absent and
+left the real `kernel-core` / `kernel-modules*` packages in place. See
+[Cleanup follow-up](2026-11-04-cleanup-followup.md).
+
 The F44 → F45 upgrade left the desktop working but the log describing it out of date. Two
 extensions the README treated as live had been removed, their UUIDs were still in
 `enabled-extensions`, and several tables pointed at directories that no longer exist. This entry
@@ -145,8 +149,9 @@ reinstalled with `sudo dnf install kernel-7.2.13-200.fc44 kernel-7.2.14-200.fc44
 
 ## Known gaps
 
-- The sudo cleanup above has not been executed yet; this entry records the commands, not their
-  result. Update the table after running them.
+- The first sudo pass removed nothing kernel-related because it named only the `kernel`
+  meta-packages; `kernel-core` and `kernel-modules*` remain installed. See
+  [Cleanup follow-up](2026-11-04-cleanup-followup.md) for the corrected command.
 - The `LuisDark` shell theme, `~/.config/gdm-theme`, the Nautilus Python extensions and GPaste are
   all gone. Only their historical entries remain.
 - There is no User Themes extension on F45, so `.themes` is a GTK3-only surface. Panel CSS now
