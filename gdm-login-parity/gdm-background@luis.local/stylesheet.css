@@ -1,0 +1,16 @@
+/*
+ * The GDM greeter deliberately skips LayoutManager's desktop background
+ * actors: layout.js returns early when Main.sessionMode.isGreeter.  The shell
+ * theme therefore leaves #lockDialogGroup at its flat #222226 colour, and
+ * LoginDialog never creates a background of its own.  The unlock dialog does
+ * the opposite (UnlockDialog._createBackground), which is why Super+L shows
+ * the wallpaper and the logout screen does not.
+ *
+ * This rule is only loaded in GDM because metadata.json declares
+ * "session-modes": ["gdm"].
+ */
+#lockDialogGroup {
+    background-image: url("file:///usr/local/share/backgrounds/luishowin/wpp-blur.jpg");
+    background-size: cover;
+    background-color: #222226;
+}

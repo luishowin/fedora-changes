@@ -27,11 +27,13 @@ the part you cannot re-derive from a diff six months later.
 |---|---|---|
 | 2026-09-12 | [Nautilus "Copy Path" — in-process clipboard + GPaste](2026-09-12-nautilus-clipboard.md) | retired — GPaste and nautilus-python removed on F45 |
 | 2026-09-12 | [Top bar clock — the weekday, and what the macOS reference already matched](2026-09-12-top-bar-clock-weekday.md) | live — the `clock-show-weekday` setting survives |
-| 2026-09-12 | [Clock — macOS date/time spacing, and greeter parity](2026-09-12-clock-gap-and-greeter.md) | retired — `topbar-clock` removed on F45; greeter never changed |
+| 2026-09-12 | [Clock — macOS date/time spacing, and greeter parity](2026-09-12-clock-gap-and-greeter.md) | retired — `topbar-clock` removed on F45; greeter half superseded by the 2026-11-05 GDM entry |
 | 2026-11-04 | [Fedora 45 upgrade — dead extensions, caches and stale state](2026-11-04-fedora-45-upgrade.md) | live — cleanup complete |
 | 2026-11-04 | [Cleanup follow-up — the kernel meta-package trap](2026-11-04-cleanup-followup.md) | live — corrected removal executed |
 | 2026-11-04 | [Top bar and Control Center — weight, icon size, blur, corners](2026-11-04-panel-and-control-center.md) | live — blur half revised by the entry below |
 | 2026-11-04 | [Control Center live blur — show the app, not the wallpaper](2026-11-04-control-center-live-blur.md) | live |
+| 2026-11-04 | [Power profile icon — leaf, bolt, and a 23 px panel](2026-11-04-power-profile-icons.md) | live |
+| 2026-11-05 | [GDM login screen — wallpaper, clock and cursor parity](2026-11-05-gdm-login-parity.md) | live |
 | 2026-11-04 | [Terminal prompt — `luishowin >`](2026-11-04-terminal-prompt.md) | live |
 | 2026-11-04 | [Public repo — `luishowin/fedora-changes`](2026-11-04-public-repo.md) | live |
 
@@ -58,6 +60,9 @@ The customisation surface of this machine, in one table.
 | | |
 |---|---|
 | `~/.local/share/gnome-shell/extensions/` | user extensions: `panel-tweaks@luis.local`, and the user copy of Blur My Shell that shadows the incomplete Fedora RPM |
+| `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only extension that puts the wallpaper behind the login dialog |
+| `/usr/local/share/backgrounds/luishowin/` | clear and pre-blurred `wpp.jpg` used by the GDM greeter |
+| `/usr/local/share/icons/WhiteSur-cursors/` | system copy of the cursor theme, for the GDM greeter |
 | `~/.themes/WhiteSur-Dark/` | GTK3 theme. There is no shell theme on F45 — the User Themes extension is not installed |
 | `~/.config/gtk-4.0/gtk.css` | libadwaita overrides, guarded by `@media (prefers-color-scheme: dark)` |
 | `~/.config/gtk-3.0/bookmarks` | Nautilus sidebar rows — GTK4 Nautilus still reads the **gtk-3.0** path |
@@ -110,6 +115,24 @@ Collected across entries, because each one has cost time more than once.
   `Panel.vfunc_allocate` allocates `_rightBox` off the raw allocation and never calls
   `get_content_box()`, just as `ButtonBox` ignores it for buttons. The only lever on panel spacing
   is `-natural-hpadding`.
+- **A symbolic SVG's canvas is part of its optical size.** GNOME renders a 22×22 SVG at the same
+  St `icon-size` as a 16×16 one, so a full-bleed 16×16 icon looks roughly a third larger than a
+  22×22 icon whose art occupies a 16×16 box. Mixing icon sources requires matching the optical
+  box, not just the `panel-icon-size` value. The power-profile and padded-panel work on
+  2026-11-04 exists because WhiteSur's power-profile SVGs were 16×16 while the custom status
+  overrides were 22×22.
+- **The logout screen is not the lock screen.** Super+L locks the running user session;
+  logging out starts a separate `gnome-shell --mode=gdm` process as the `gdm` user with its own
+  dconf profile. `layout.js` skips desktop background actors for greeters and `LoginDialog` does
+  not add one, so the login screen is the shell theme's flat
+  `#lockDialogGroup { background-color: #222226 }`. The user's wallpaper/themes are also
+  unreachable because `/home/luishowin` is mode `700`. A GDM-only extension with
+  `"session-modes": ["gdm"]` is the clean place to add a login background.
+- **`DCONF_PROFILE=gdm dconf read` as the user is misleading.** `/usr/share/dconf/profile/gdm`
+  starts with `user-db:user`, so that command reads your user database first and appears to show
+  the user's background/themes. To see what the greeter actually sees, use a temporary profile
+  containing only `system-db:gdm`, `system-db:local`, `system-db:site`, `system-db:distro` and
+  `file-db:/usr/share/gdm/greeter-dconf-defaults`.
 - **The clock format is not a setting.** The four `clock-*` keys only select one of nine C
   strings inside `libgnome-desktop-4`; `_` in them renders as U+2002 and `%l`'s pad as U+2007.
   `en_GB` gets the untranslated American order only because Fedora ships no `gnome-desktop-4.0`

@@ -1,0 +1,7 @@
+{
+  "uuid": "gdm-background@luis.local",
+  "name": "GDM Background",
+  "description": "Show a pre-blurred copy of the login wallpaper behind the GDM login dialog.",
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
+  "session-modes": ["gdm"]
+}

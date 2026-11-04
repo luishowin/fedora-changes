@@ -19,11 +19,14 @@ The Wi-Fi, volume and battery icons are sized through Just Perfection's
 existing `panel-icon-size` key:
 
 ```bash
-gsettings set org.gnome.shell.extensions.just-perfection panel-icon-size 18
+gsettings set org.gnome.shell.extensions.just-perfection panel-icon-size 23
 ```
 
-That applies immediately and needs no logout. Use 19 or 20 if 18 is still
-short of the clock text on a 13-inch 1080p panel. Set it back to 16 for stock.
+23 is the current value (2026-11-04), up from 18 via 21. It applies immediately
+and needs no logout. The same key also sizes the power-profile and other panel
+indicators; the leaf/bolt artwork and padded fallbacks are documented in
+[`../2026-11-04-power-profile-icons.md`](../2026-11-04-power-profile-icons.md).
+Set it back to 16 for stock.
 
 ## Install, verify, revert, or remove
 

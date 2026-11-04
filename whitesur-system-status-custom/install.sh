@@ -15,6 +15,11 @@ fi
 install -d "$target"
 cp -a "$script_dir/index.theme" "$script_dir/status" "$script_dir/SHA256SUMS" "$target/"
 
+# Add padded 22x22 copies of the remaining GNOME panel indicators.  These are
+# generated from the installed WhiteSur theme so no third-party artwork needs
+# to live in this package.
+"$script_dir/pad-status-icons.sh" "$target"
+
 if command -v gtk4-update-icon-cache >/dev/null; then
     gtk4-update-icon-cache --force --ignore-theme-index "$target" || true
 elif command -v gtk-update-icon-cache >/dev/null; then

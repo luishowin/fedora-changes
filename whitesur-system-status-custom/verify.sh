@@ -17,6 +17,8 @@ fi
     sha256sum --check "$script_dir/SHA256SUMS"
 )
 
+"$script_dir/pad-status-icons.sh" "$target" --check
+
 current=$(gsettings get org.gnome.desktop.interface icon-theme)
 current=${current#\'}
 current=${current%\'}
