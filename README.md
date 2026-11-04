@@ -28,8 +28,8 @@ the part you cannot re-derive from a diff six months later.
 | 2026-09-12 | [Nautilus "Copy Path" — in-process clipboard + GPaste](2026-09-12-nautilus-clipboard.md) | retired — GPaste and nautilus-python removed on F45 |
 | 2026-09-12 | [Top bar clock — the weekday, and what the macOS reference already matched](2026-09-12-top-bar-clock-weekday.md) | live — the `clock-show-weekday` setting survives |
 | 2026-09-12 | [Clock — macOS date/time spacing, and greeter parity](2026-09-12-clock-gap-and-greeter.md) | retired — `topbar-clock` removed on F45; greeter never changed |
-| 2026-11-04 | [Fedora 45 upgrade — dead extensions, caches and stale state](2026-11-04-fedora-45-upgrade.md) | partial — kernel subpackages still installed |
-| 2026-11-04 | [Cleanup follow-up — the kernel meta-package trap](2026-11-04-cleanup-followup.md) | partial — corrected `dnf remove` pending |
+| 2026-11-04 | [Fedora 45 upgrade — dead extensions, caches and stale state](2026-11-04-fedora-45-upgrade.md) | live — cleanup complete |
+| 2026-11-04 | [Cleanup follow-up — the kernel meta-package trap](2026-11-04-cleanup-followup.md) | live — corrected removal executed |
 | 2026-11-04 | [Top bar and Control Center — weight, icon size, blur, corners](2026-11-04-panel-and-control-center.md) | live — blur half revised by the entry below |
 | 2026-11-04 | [Control Center live blur — show the app, not the wallpaper](2026-11-04-control-center-live-blur.md) | live |
 | 2026-11-04 | [Terminal prompt — `luishowin >`](2026-11-04-terminal-prompt.md) | live |
@@ -82,13 +82,15 @@ Collected across entries, because each one has cost time more than once.
 - **A clean journal proves nothing.** `gnome-extensions info <uuid>` reports `State: ACTIVE`
   independently of whether the CSS matched anything. A stylesheet that was never loaded logs
   exactly the same silence as one that loaded fine.
+- **Removing an old Fedora kernel by its `kernel-<version>` name can be a no-op.** Once the
+  `kernel` meta-package is gone, the payload is `kernel-core`, `kernel-modules`,
+  `kernel-modules-core` and `kernel-modules-extra`. `rpm -q kernel` then looks clean while
+  `/usr/lib/modules` and `/boot` are still full. Remove the payload packages by their full
+  version.
+- **`dnf clean all` does not clear `/var/cache/dnf5daemon-server/`.** That cache belongs to the
+  dnf5 daemon and can still hold hundreds of megabytes after the dnf caches report zero.
 - **St implements a small CSS subset** — no `display`, no `visibility`. Hiding a Shell element
   requires an extension.
-- **The `kernel` package is only a meta-package.** Removing it does not remove `kernel-core`,
-  `kernel-modules`, `kernel-modules-core` or `kernel-modules-extra`; name those explicitly to
-  reclaim `/usr/lib/modules/<ver>` and `/boot/initramfs-<ver>.img`.
-- **`dnf clean all` does not clear `/var/cache/dnf5daemon-server`.** That 200 MB cache belongs to
-  the dnf5daemon service; remove its contents separately.
 - **The Fedora 45 Blur My Shell RPM is incomplete.** It ships `stylesheet.css` but not the
   `styles/` directory that file `@import`s. The Clutter effects still run, but popup backgrounds
   stay opaque and every panel style class is inert. Install the upstream zip into the **user**

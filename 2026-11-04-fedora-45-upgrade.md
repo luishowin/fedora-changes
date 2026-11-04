@@ -1,9 +1,9 @@
 # Fedora 45 upgrade — dead extensions, caches and stale state
 
-**Partial** as of 2026-11-04. The user-side cleanup is done; the sudo half is listed at the end.
+**Live** as of 2026-11-04. Both the user-side and root-side cleanup have been executed.
 
-**Revised 2026-11-04:** the first sudo pass found the `kernel` meta-packages already absent and
-left the real `kernel-core` / `kernel-modules*` packages in place. See
+**Revised 2026-11-04:** the first sudo pass named only the `kernel` meta-packages and was a
+no-op; the full trap and corrected removal are in
 [Cleanup follow-up](2026-11-04-cleanup-followup.md).
 
 The F44 → F45 upgrade left the desktop working but the log describing it out of date. Two
@@ -70,7 +70,8 @@ stale log.
 
 ### The `.fc44` packages are mostly not leftovers
 
-`rpm -qa | grep fc44` finds 18 packages, but most are required by `.fc45` binaries through their
+`rpm -qa | grep fc44` originally found 18 packages. After the old kernels were removed, eight
+non-kernel `.fc44` packages remain, and most are required by `.fc45` binaries through their
 sonames:
 
 ```bash
@@ -82,25 +83,49 @@ rpm -q --whatrequires 'libjsoncpp.so.26()(64bit)'   # cmake, openxr-libs (fc45)
 Removing them would break working F45 packages. `ida` and `tubegrab` are applications, not
 dependencies. Only the two old kernels are safe to drop.
 
-### Still needs sudo
+### Root cleanup — executed
+
+The first attempt targeted the `kernel` meta-packages and was a no-op: the F44 `kernel` packages
+had already been removed, while their payload packages remained. Fedora splits a kernel into
+`kernel-core`, `kernel-modules`, `kernel-modules-core` and `kernel-modules-extra`; the `kernel`
+package is only a meta-package that requires them. The correct removal is:
 
 ```bash
-# 1. Confirm the running kernel is the F45 one first.
-uname -r        # expected: 7.2.15-300.fc45.x86_64
+# Confirm the running kernel is the F45 one first.
+uname -r        # 7.2.15-300.fc45.x86_64
 
-# 2. Old F44 kernels + their modules and initramfs (~700 MB).
-sudo dnf remove kernel-7.2.13-200.fc44.x86_64 kernel-7.2.14-200.fc44.x86_64
+sudo dnf remove \
+  kernel-core-7.2.13-200.fc44.x86_64 \
+  kernel-modules-7.2.13-200.fc44.x86_64 \
+  kernel-modules-core-7.2.13-200.fc44.x86_64 \
+  kernel-modules-extra-7.2.13-200.fc44.x86_64 \
+  kernel-core-7.2.14-200.fc44.x86_64 \
+  kernel-modules-7.2.14-200.fc44.x86_64 \
+  kernel-modules-core-7.2.14-200.fc44.x86_64 \
+  kernel-modules-extra-7.2.14-200.fc44.x86_64
 
-# 3. Runtime branches no installed Flatpak references (1–2 GB).
-sudo flatpak uninstall --unused -y
-
-# 4. Repository metadata and package caches (~450 MB).
-sudo dnf clean all
-sudo rm -rf /var/cache/swcatalog/* /var/cache/fwupd/*
-
-# 5. Journal, currently 168.5 MB.
-sudo journalctl --vacuum-size=100M
+# The dnf5 daemon cache is not touched by `dnf clean all`.
+sudo rm -rf /var/cache/dnf5daemon-server/*
 ```
+
+Result:
+
+| item | before | after |
+|---|---|---|
+| F44 kernel payload packages | 8 packages | none |
+| `/usr/lib/modules/7.2.1{3,4}-200.fc44` | 340 MB | removed |
+| `/boot/initramfs-7.2.1{3,4}-200.fc44.img` | 148 MB | removed |
+| `/boot` usage | 609 MB | 402 MB |
+| `/var/cache/dnf5daemon-server/` | 207 MB | 0 |
+
+The other root commands were genuinely already clean:
+
+- `flatpak uninstall --unused -y` → “Nothing unused to uninstall”. The remaining Platform 25.08
+  / 26.08, GL, codecs and SDK branches are all referenced by VS Code, LocalSend or Spotifast.
+- `dnf clean all` → removed 0 files; the dnf caches were already empty. The 207 MB daemon cache
+  above was the actual remainder.
+- `journalctl --vacuum-size=100M` → 98.3 MB, already under the target; freed 0.
+- `/var/cache/swcatalog` and `/var/cache/fwupd` were already empty.
 
 The 263 MB `initramfs-0-rescue-*.img` is left alone: deleting it saves space but leaves a GRUB
 entry that cannot boot until the rescue image is regenerated.
@@ -113,6 +138,8 @@ entry that cannot boot until the rescue image is regenerated.
 |---|---|
 | `org.gnome.shell enabled-extensions` | 9 UUIDs → 7 valid; the two dead ones removed |
 | `~/.cache/` | six regenerable caches and the rotated dnf5 logs removed |
+| `kernel-core-7.2.1{3,4}-200.fc44` + modules | eight payload packages and their initramfs removed |
+| `/var/cache/dnf5daemon-server/` | 207 MB dnf5 daemon cache removed |
 | `README.md` | version, index, live-state tables and "things that bite" corrected |
 | `2026-09-12-clock-gap-and-greeter.md` | status changed to **retired** |
 | `2026-09-12-nautilus-clipboard.md` | status changed to **retired** |
@@ -130,7 +157,9 @@ gnome-extensions info topbar-clock@luis.local
 
 du -sh ~/.cache
 journalctl --disk-usage
-rpm -q kernel
+rpm -q kernel-core          # -> only kernel-core-7.2.15-300.fc45.x86_64
+ls -lh /boot/*.img          # -> rescue + fc45 only
+df -h /boot                 # -> ~402 MB used
 ```
 
 **Misleading check:** `gnome-extensions list` reads the directories the running Shell
@@ -142,16 +171,17 @@ enumerated at login; it does not prove the GSettings list is clean. Check both
 ## Rollback
 
 Cache removal is not reversible and needs no rollback. To restore a dead UUID, add it back to
-`enabled-extensions` — but there is no directory behind it, so do not. The old kernels can be
-reinstalled with `sudo dnf install kernel-7.2.13-200.fc44 kernel-7.2.14-200.fc44`.
+`enabled-extensions` — but there is no directory behind it, so do not. The old F44 kernels are no
+longer available from the F45 repositories, so that removal is not practically reversible; they
+were only needed to boot an F44 userspace that no longer exists.
 
 ---
 
 ## Known gaps
 
-- The first sudo pass removed nothing kernel-related because it named only the `kernel`
-  meta-packages; `kernel-core` and `kernel-modules*` remain installed. See
-  [Cleanup follow-up](2026-11-04-cleanup-followup.md) for the corrected command.
+- The 263 MB rescue initramfs is deliberately kept, as are Chrome's cache (~1.8 GB) and the Codex
+  runtime (~1.7 GB). Only they and the eight legitimate `.fc44` dependency packages remain from
+  the upgrade leftovers.
 - The `LuisDark` shell theme, `~/.config/gdm-theme`, the Nautilus Python extensions and GPaste are
   all gone. Only their historical entries remain.
 - There is no User Themes extension on F45, so `.themes` is a GTK3-only surface. Panel CSS now

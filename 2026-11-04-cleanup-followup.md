@@ -1,7 +1,6 @@
 # Cleanup follow-up — the kernel meta-package trap
 
-**Partial** as of 2026-11-04. The first sudo pass ran, but the two old kernels are still on disk
-because only the `kernel` meta-packages were named.
+**Live** as of 2026-11-04. The corrected removal was executed and both old kernel trees are gone.
 
 The first cleanup block completed without errors:
 
@@ -82,8 +81,21 @@ df -h /boot
 rpm -qa 'kernel*' | grep fc44 || echo "no fc44 kernels left"
 ```
 
-Removing `kernel-core` should also remove the matching `/boot/vmlinuz-*` and
-`/boot/initramfs-*` files; check `/boot` after the command rather than deleting them by hand.
+Removing `kernel-core` also removed the matching `/boot/vmlinuz-*` and `/boot/initramfs-*`
+files through the kernel scriptlets; no manual file deletion was needed.
+
+## Final result
+
+| item | before | after |
+|---|---|---|
+| F44 kernel payload packages | 8 packages | none |
+| `/usr/lib/modules/7.2.1{3,4}-200.fc44` | 340 MB | removed |
+| `/boot/initramfs-7.2.1{3,4}-200.fc44.img` | 148 MB | removed |
+| `/boot` usage | 609 MB | 402 MB |
+| `/var/cache/dnf5daemon-server/` | 207 MB | 0 |
+
+Only `kernel-core-7.2.15-300.fc45.x86_64`, the official rescue initramfs and the fc45 initramfs
+remain in `/boot`.
 
 ---
 
@@ -93,17 +105,18 @@ Removing `kernel-core` should also remove the matching `/boot/vmlinuz-*` and
 |---|---|
 | `2026-11-04-fedora-45-upgrade.md` | first-pass commands and result table; marked revised |
 | `README.md` | index status updated |
-| `/var/cache/dnf5daemon-server/` | still to be cleared manually |
+| `kernel-core-7.2.1{3,4}-200.fc44` + modules | removed; initramfs and GRUB entries followed |
+| `/var/cache/dnf5daemon-server/` | 207 MB removed |
 
 ---
 
 ## Verification
 
 ```bash
-rpm -qa 'kernel*' | grep fc44 || echo clean
-du -sh /usr/lib/modules/7.2.13-200.fc44.x86_64 2>/dev/null || true
-df -h /boot
-du -sh /var/cache/dnf5daemon-server
+rpm -qa 'kernel*' | grep fc44 || echo clean   # clean
+rpm -q kernel-core                             # only kernel-core-7.2.15-300.fc45.x86_64
+df -h /boot                                    # ~402 MB used
+du -sh /var/cache/dnf5daemon-server            # 0
 ```
 
 ---
@@ -117,7 +130,6 @@ would require the F44 repository, which is no longer configured; treat this as o
 
 ## Known gaps
 
-- The corrected `dnf remove` has not been run yet. The entry is partial until it is.
 - The 263 MB rescue initramfs is still deliberately kept.
 - The `.fc44` libraries (`simdutf`, `zimg`, `jsoncpp`, etc.) are still required by F45 binaries;
   do not remove them.
