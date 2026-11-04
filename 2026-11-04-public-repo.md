@@ -69,6 +69,17 @@ git remote add origin git@github.com:luishowin/fedora-changes.git
 git push -u origin main
 ```
 
+The first push succeeded over SSH. A later push failed with
+`git@github.com: Permission denied (publickey)` even though `ssh -T git@github.com` still
+authenticated and the ed25519 key was loaded in the agent. Rather than debug a flaky agent, the
+remote was switched to HTTPS and `gh auth setup-git` was used; git then authenticates through
+the `gh` keyring token. The current remote is:
+
+```bash
+git remote set-url origin https://github.com/luishowin/fedora-changes.git
+gh auth setup-git
+```
+
 ---
 
 ## Files
