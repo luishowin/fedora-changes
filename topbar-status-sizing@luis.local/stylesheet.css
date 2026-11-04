@@ -1,0 +1,12 @@
+/*
+ * GNOME Shell 50 normally renders these at 16px. 18.4px is a 15% increase.
+ * The selector limits the change to system indicators in the top bar.
+ */
+#panel .panel-button .system-status-icon {
+    icon-size: 18.4px !important;
+}
+
+/* Match the 400 weight set by the existing topbar-clock extension. */
+#panel .power-status StLabel {
+    font-weight: 400 !important;
+}

@@ -1,0 +1,6 @@
+{
+  "uuid": "topbar-status-sizing@luis.local",
+  "name": "Top Bar Status Sizing",
+  "description": "Makes GNOME top-bar status icons 15% larger and aligns the battery percentage with the clock weight.",
+  "shell-version": ["50"]
+}

@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=WhiteSur System Status Custom
+Comment=Personal GNOME status-indicator overrides based on user-supplied SVGs
+Inherits=WhiteSur
+Directories=status/symbolic
+
+[status/symbolic]
+Size=16
+Context=Status
+Type=Scalable
+MinSize=8
+MaxSize=512

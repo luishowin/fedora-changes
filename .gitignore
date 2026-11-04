@@ -1,0 +1,11 @@
+# Local artifacts; the markdown conversion is tracked instead.
+output/pdf/*.pdf
+
+# Scratch space
+tmp/
+
+# Editor / Python cruft
+__pycache__/
+*.pyc
+.venv/
+.DS_Store

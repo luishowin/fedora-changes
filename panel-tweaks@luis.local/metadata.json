@@ -1,0 +1,6 @@
+{
+  "uuid": "panel-tweaks@luis.local",
+  "name": "Panel Tweaks",
+  "description": "Lowers the top-bar date/time font weight from bold 700 to semibold 600.",
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"]
+}
