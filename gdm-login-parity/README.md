@@ -8,24 +8,44 @@ The greeter shows:
 
 - the supplied `wpp.jpg` wallpaper with a live 10 px blur and a 20% black scrim;
 - a large time and date at the top;
-- one centred avatar/name pill;
+- one avatar/name pill near the bottom centre;
 - after clicking the avatar, the avatar pill plus a password pill side by side;
 - the password pill keeps the submit chevron but drops the stock peek/eye icon,
   so the full “Password” hint fits;
+- the top bar uses the generated `WhiteSur-GDM` icon theme (custom status
+  artwork over WhiteSur actions/devices/places);
 - one **Options** menu at the bottom right;
 - a transparent top bar with the quick-settings/power control still available.
 
 The clock fades out when authentication begins and fades back in when the user
 returns to the avatar state.
 
-The prompt row is fixed at **555 px** for the current `luishowin` account:
-224 px user pill + 15 px gap + 316 px password pill. The avatar has a 15 px
-inset on all sides, and the password entry keeps only the submit chevron; its
+The prompt row is fixed at **441 px** for the current `luishowin` account:
+176 px user pill + 12 px gap + 253 px password pill. Both pills are **44 px**
+tall (about 20% shorter than the previous 56 px) with a 22 px radius and a single
+1 px border. The avatar is 30 px with a 7 px left inset — 5 px further left
+than the previous 12 px. The password entry keeps only the submit chevron; its
 stock peek/eye icon is disabled. The live background uses one full-screen 20%
 black scrim, so there is no mid-screen overlay boundary.
 
+Both the initial avatar pill and the password row are anchored **80 px above
+the bottom edge**; the clock stays at the top. `LoginDialog` centres its
+children internally, so `extension.js` applies a translation and recomputes it
+on visibility, height and monitor changes. The fixed 44 px prompt keeps the row
+in place while a password error message renders below it inside the 80 px
+bottom gap.
+
+The auth prompt's user widget is converted to horizontal as soon as its child
+is set, and a prompt-scoped CSS rule fixes the avatar at 30 px. This avoids the
+brief 160 px avatar flash during the greeter-to-password transition.
+
+The **Options** trigger and popup items are 12 px, the popup rows use 3 px
+vertical padding, and the toggle switches are 32 × 18 px.
+
 The package is intentionally scoped to GDM. It does **not** change the desktop
-wallpaper, the Super+L lock screen, the GTK theme or the icon theme.
+wallpaper, the Super+L lock screen or the GTK theme. GDM gets its own minimal
+icon theme, `WhiteSur-GDM`, generated from the user's WhiteSur and custom
+status assets; the desktop icon theme is untouched.
 
 ## Why this needs an extension, not a setting
 
@@ -52,7 +72,8 @@ The extension does four things:
    `BackgroundManager` + `Shell.BlurEffect` pattern;
 2. adds the large time/date and fades it when `AuthPrompt.visible` changes;
 3. turns the single user item into the avatar pill and, once the auth prompt
-   appears, lays the user pill and password entry out horizontally;
+   appears, lays the user pill and password entry out horizontally; both states
+   are anchored 80 px above the bottom edge;
 4. relabels the login-options button to **Options** and puts the accessibility
    toggles and power actions into its existing popup menu.
 
@@ -63,7 +84,9 @@ Shell version, the extension logs the problem and stock GDM login still works.
 
 The script writes to `/usr/local/share`, `/etc/dconf` and runs `dconf update`,
 so it needs sudo. Run it as your user, **not** with `sudo ./install.sh`, so it
-can read `~/Downloads/wpp.jpg` and `~/.local/share/icons/WhiteSur-cursors`:
+can read `~/Downloads/wpp.jpg`, `~/.local/share/icons/WhiteSur-cursors`,
+`~/.local/share/icons/WhiteSur` and
+`~/.local/share/icons/WhiteSur-System-Status-Custom`:
 
 ```bash
 cd ~/Documents/fedora-changes/gdm-login-parity
@@ -93,6 +116,7 @@ enabled-extensions=['gdm-background@luis.local']
 clock-format='12h'
 clock-show-weekday=true
 cursor-theme='WhiteSur-cursors'
+icon-theme='WhiteSur-GDM'
 accent-color='slate'
 color-scheme='prefer-dark'
 
@@ -111,9 +135,9 @@ sets `[org/gnome/login-screen] logo=''`.
 ./verify.sh
 ```
 
-It checks the extension, both wallpaper copies, the cursor theme, the design
-tokens in the CSS/JS, and the greeter dconf values using a **system-only**
-dconf profile.
+It checks the extension, both wallpaper copies, the cursor theme, the
+generated `WhiteSur-GDM` icon theme, the 441 × 44 px / 80 px layout tokens in
+the CSS/JS, and the greeter dconf values using a **system-only** dconf profile.
 
 Log out and back in after installing. The greeter is started fresh at logout;
 there is no need to restart GDM (which would kill the session).
@@ -121,13 +145,17 @@ there is no need to restart GDM (which would kill the session).
 Checklist after the logout:
 
 - the woodshop wallpaper is visible and blurred, with the large clock;
-- the avatar pill is centred;
+- the avatar pill is centred horizontally near the bottom;
 - clicking the avatar fades the clock and shows the password pill beside it;
+  the row stays bottom-anchored through the transition;
 - the password entry is focused;
 - a wrong password shows the usual error below the row;
 - clicking the avatar again returns to the user-list state and fades the clock
   back in;
-- **Options** opens accessibility toggles, Switch User, Restart and Power Off;
+- **Options** opens compact 12 px accessibility toggles, Switch User, Restart
+  and Power Off;
+- the top-right Wi-Fi, battery, power and keyboard icons use the WhiteSur
+  artwork from `WhiteSur-GDM` (at GDM's default icon size);
 - the top-right quick settings/power control still works.
 
 **Misleading check:** do not verify with
@@ -148,9 +176,26 @@ your user database, not the greeter's. Use a system-only profile, as
 
 `./uninstall.sh` is a thin alias for the same operation.
 
-It removes the dconf keyfile, extension, images and system cursor copy, then
-runs `dconf update`. The desktop and lock-screen wallpaper are untouched. Log
-out and back in to return to the flat GDM background.
+It removes the dconf keyfile, extension, images, system cursor copy and the
+generated `WhiteSur-GDM` icon theme, then runs `dconf update`. The desktop and
+lock-screen wallpaper are untouched. Log out and back in to return to the flat
+GDM background.
+
+## Top bar
+
+`install.sh` generates `/usr/local/share/icons/WhiteSur-GDM` from the user's
+WhiteSur symbolic `actions`, `categories`, `devices`, `places` and `status`
+directories, then overlays `WhiteSur-System-Status-Custom/status/symbolic` so
+the home bar's exact padded status artwork is used. The theme inherits Adwaita
+for anything outside the top bar, and the gdm profile sets
+`icon-theme='WhiteSur-GDM'`.
+
+The home top bar uses a 23 px icon size via Just Perfection. This package
+currently changes only the **icon theme** in GDM; GDM's default panel icon
+size, height and spacing are unchanged. Because the custom status SVGs use a
+22 × 22 canvas with a 16 px optical box, they render smaller in GDM than the
+23 px home-bar icons. Adding the 23 px CSS rule is a separate refinement if
+size parity is wanted.
 
 ## Known gaps
 
@@ -180,6 +225,11 @@ out and back in to return to the flat GDM background.
   source again.
 - **The cursor is a snapshot.** Changes to
   `~/.local/share/icons/WhiteSur-cursors` require re-running `install.sh`.
+- **The GDM icon theme is generated from user assets.** `install.sh` needs
+  `~/.local/share/icons/WhiteSur` and `WhiteSur-System-Status-Custom`; the
+  generated theme is a snapshot and must be regenerated after WhiteSur changes.
+- **Top-bar icon size is still GDM's.** Theme-only means the home artwork is
+  used at GDM's default size, not the home bar's 23 px.
 - **The wallpaper is world-readable.** `/usr/local/share` is readable by every
   local user. It is the woodshop wallpaper; if a personal image is used later,
   move it to a gdm-private location and update the stylesheet/installer.

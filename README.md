@@ -64,6 +64,7 @@ The customisation surface of this machine, in one table.
 | `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only login extension: live wallpaper, large clock, avatar/password pills, Options |
 | `/usr/local/share/backgrounds/luishowin/` | clear `wpp.jpg` for live blur plus a pre-blurred fallback for the GDM greeter |
 | `/usr/local/share/icons/WhiteSur-cursors/` | system copy of the cursor theme, for the GDM greeter |
+| `/usr/local/share/icons/WhiteSur-GDM/` | generated minimal WhiteSur symbolic theme for the GDM top bar |
 | `~/.themes/WhiteSur-Dark/` | GTK3 theme. There is no shell theme on F45 — the User Themes extension is not installed |
 | `~/.config/gtk-4.0/gtk.css` | libadwaita overrides, guarded by `@media (prefers-color-scheme: dark)` |
 | `~/.config/gtk-3.0/bookmarks` | Nautilus sidebar rows — GTK4 Nautilus still reads the **gtk-3.0** path |

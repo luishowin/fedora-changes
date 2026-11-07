@@ -7,6 +7,7 @@ background_dir='/usr/local/share/backgrounds/luishowin'
 extension_root='/usr/local/share/gnome-shell/extensions'
 icons_root='/usr/local/share/icons'
 cursor_name='WhiteSur-cursors'
+icon_name='WhiteSur-GDM'
 dconf_file='/etc/dconf/db/gdm.d/20-luis-login-parity'
 
 if ! command -v sudo >/dev/null; then
@@ -21,6 +22,7 @@ sudo rm -rf "$extension_root/$extension_name"
 sudo rm -f "$background_dir/wpp.jpg" "$background_dir/wpp-blur.jpg"
 sudo rmdir "$background_dir" 2>/dev/null || true
 sudo rm -rf "$icons_root/$cursor_name"
+sudo rm -rf "$icons_root/$icon_name"
 sudo dconf update
 
 printf '%s\n' 'Removed the GDM login-screen parity package.'

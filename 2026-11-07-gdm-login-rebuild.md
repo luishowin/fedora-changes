@@ -100,21 +100,22 @@ extension, not just a stylesheet:
 - **Clock:** a `GnomeDesktop.WallClock` and a date label added to the shield
   group. `notify::clock` refreshes the time; `notify::allocation` re-centres it.
 - **User pill:** each `UserListItem` is made non-expanding and horizontally
-  centred; its `UserWidget` is forced horizontal, spacing 21 px. The single
-  account is shown as the avatar/name pill; the “Not listed?” link is hidden
-  when there is only one account.
+  centred; its `UserWidget` is forced horizontal, spacing 17 px. The single
+  account is shown as a 176 × 44 px avatar/name pill with a 30 px avatar; the
+  “Not listed?” link is hidden when there is only one account.
 - **Password row:** `AuthPrompt` is changed to `Clutter.Orientation.HORIZONTAL`
-  with 15 px spacing. Its internal `_userWell` is kept as the left pill and
-  `_inputWell` becomes the right password pill. The stock cancel button is
-  hidden; the avatar pill is the back control and Escape still works. Empty
-  message labels are hidden so they do not add height. The stock peek/eye
-  icon is disabled so the full “Password” hint fits; the submit chevron stays
-  at the right.
+  with 12 px spacing. Its internal `_userWell` is kept as the left pill and
+  `_inputWell` becomes the right 253 × 44 px password pill. The stock cancel
+  button is hidden; the avatar pill is the back control and Escape still
+  works. Empty message labels are hidden so they do not add height. The stock
+  peek/eye icon is disabled so the full “Password” hint fits; the submit
+  chevron stays at the right.
 - **Options:** the existing `AuthMenuButton` popup is reused, relabelled to
   “Options ›”, and made visible by its Switch User, Restart and Power Off
   items. Accessibility
   toggles are added as `PopupSwitchMenuItem`s; Restart and Power Off use
-  `SystemActions`. The separate accessibility button is hidden.
+  `SystemActions`. The separate accessibility button is hidden. The trigger
+  and popup items are 12 px and the switches are 32 × 18 px.
 - **Panel:** `Main.panel.statusArea.dateMenu.container` is hidden so the large
   clock is the only clock.
 
@@ -154,6 +155,73 @@ item=224x70               prompt row centred
 The visible avatar inset is now equal left/top (16 px including the 1 px pill
 border), and there is no mid-screen scrim edge.
 
+### Second follow-up — shorter pills and top-bar theme
+
+The next live pass asked for a shorter, tighter row:
+
+- both pills are now **56 px** tall (20% shorter than 70 px), with a 28 px
+  radius; the prompt row is 551 px (220 px user pill + 15 px gap + 316 px
+  password pill);
+- the avatar moved 4 px left, from a 15 px to an 11 px left inset;
+- the auth prompt's user widget is converted to horizontal as soon as its
+  child is set, and a prompt-scoped CSS rule fixes the avatar at 38 px. The
+  shell's vertical 160 px avatar can no longer paint for a transition frame;
+- the GDM top bar now uses a generated `WhiteSur-GDM` icon theme: the user's
+  WhiteSur symbolic `actions`, `categories`, `devices`, `places` and `status`
+  directories, with `WhiteSur-System-Status-Custom/status/symbolic` overlaid.
+  The gdm profile sets `icon-theme='WhiteSur-GDM'`.
+
+The icon-theme work was deliberately scoped to the **theme only**; GDM keeps
+its default panel icon size (1.091em), height and spacing. The home bar's 23 px
+Just Perfection size is not applied, so the padded custom status icons render
+smaller than the home bar. This is a known gap, not a missing install step.
+
+Headless GDM 51.1 verification after this pass:
+
+```text
+prompt=551x56             prompt avatar=12,9 38x38
+user pill=220x56          password entry=316x56
+show_peek_icon=false      icon-theme=WhiteSur-GDM
+panel height=32           top-bar size unchanged
+```
+
+### Third follow-up — about 20% smaller row, bottom anchor, compact Options
+
+The live greeter still felt oversized. This pass:
+
+- the pill row is now **441 × 44 px**: 176 px user pill + 12 px gap + 253 px
+  password pill;
+- both pills use a 22 px radius and a **single 1 px border**; the old
+  selected-state inset shadow was removed so focus cannot add a second ring;
+- the avatar is 30 px with a **7 px left inset** — 5 px further left than the
+  previous 12 px;
+- the pill name and password text are 19 px; the clock is unchanged;
+- both the initial avatar pill and the password row are anchored **80 px above
+  the bottom edge**; the clock stays at the top;
+- the Options trigger and popup items are 12 px, with 3 px vertical item
+  padding and 32 × 18 px toggle switches.
+
+The greeter is **not** at 150% scale: `~/.config/monitors.xml` has
+`<scale>1</scale>`, `text-scaling-factor` is `1.0`, and the gdm profile sets no
+scale. At 1.0 a 1 px CSS border is 1 device pixel; the earlier size was simply
+the design.
+
+`LoginDialog` centres its children in `vfunc_allocate()`, so the bottom anchor
+is a `translation_y` in `extension.js` rather than CSS. It accounts for the
+stock `+50 px` auth-prompt offset and is recomputed on height, visibility and
+monitor changes. The fixed 44 px prompt keeps the row in place while an error
+message renders below it inside the 80 px bottom gap.
+
+Headless GDM 51.1 verification after this pass:
+
+```text
+prompt=441x44             prompt avatar=7,7 30x30
+user pill=176x44          password entry=253x44
+user list bottom=1000     prompt bottom=1000
+show_peek_icon=false      icon-theme=WhiteSur-GDM
+options item height=24    switch=32x18
+```
+
 ### Assets and dconf
 
 `install.sh` now:
@@ -162,6 +230,8 @@ border), and there is no mid-screen scrim edge.
 - writes the clear `wpp.jpg` and a 10 px, 20%-dim `wpp-blur.jpg` fallback;
 - sets the greeter background URI to the clear image;
 - keeps the WhiteSur cursor copy;
+- generates `/usr/local/share/icons/WhiteSur-GDM` from WhiteSur and the custom
+  status theme, and sets `icon-theme='WhiteSur-GDM'`;
 - sets `accent-color='slate'` and `color-scheme='prefer-dark'`;
 - keeps the existing 12h weekday clock setting and the blank logo.
 
@@ -175,11 +245,12 @@ is the `BLUR_RADIUS` constant in `extension.js`.
 | `gdm-login-parity/gdm-background@luis.local/extension.js` | live background, clock, login layout, Options menu |
 | `gdm-login-parity/gdm-background@luis.local/stylesheet.css` | pill geometry, clock, panel, fallback |
 | `gdm-login-parity/gdm-background@luis.local/metadata.json` | `session-modes: ["gdm"]`, shell 51 |
-| `gdm-login-parity/install.sh` | images, cursor, gdm dconf |
-| `gdm-login-parity/verify.sh` | files, design tokens, dconf |
-| `gdm-login-parity/revert.sh` | remove system files and dconf |
+| `gdm-login-parity/install.sh` | images, cursor, generated GDM icon theme, gdm dconf |
+| `gdm-login-parity/verify.sh` | files, design tokens, icon theme, dconf |
+| `gdm-login-parity/revert.sh` | remove system files, icon theme and dconf |
 | `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | installed extension |
 | `/usr/local/share/backgrounds/luishowin/{wpp,wpp-blur}.jpg` | greeter wallpaper and fallback |
+| `/usr/local/share/icons/WhiteSur-GDM/` | generated minimal WhiteSur icon theme for the GDM top bar |
 | `/etc/dconf/db/gdm.d/20-luis-login-parity` | extension, background, interface keys |
 
 ---
@@ -193,8 +264,8 @@ cd ~/Documents/fedora-changes/gdm-login-parity
 ```
 
 `verify.sh` checks the extension metadata, the presence of the live-background
-and clock code, both 1920×1080 images, the cursor, and these greeter values
-using a system-only dconf profile:
+and clock code, the 441 × 44 px / 80 px layout tokens, both 1920×1080 images,
+the cursor, and these greeter values using a system-only dconf profile:
 
 ```text
 enabled-extensions  includes gdm-background@luis.local
@@ -206,6 +277,7 @@ color-scheme        prefer-dark
 picture-uri         file:///usr/local/share/backgrounds/luishowin/wpp.jpg
 picture-uri-dark    file:///usr/local/share/backgrounds/luishowin/wpp.jpg
 picture-options     zoom
+icon-theme          WhiteSur-GDM
 ```
 
 Log out and back in. The greeter is a fresh process; do not restart GDM (that
@@ -214,13 +286,14 @@ would kill the session).
 Visual checklist:
 
 - live blurred woodshop wallpaper, top clock and date visible;
-- one avatar/name pill centred;
+- one avatar/name pill centred horizontally near the bottom;
 - click the avatar: clock fades out, password pill appears beside the avatar
-  and receives focus;
+  and receives focus; the row stays 80 px above the bottom edge;
 - wrong password shows the normal error below the row;
 - click the avatar or press Escape: return to the avatar state and fade the
   clock back in;
-- Options: accessibility toggles, Switch User, Restart, Power Off;
+- Options: compact 12 px accessibility toggles, Switch User, Restart,
+  Power Off; toggle switches are visibly smaller;
 - top-right quick settings/power still works;
 - if the extension fails, the CSS fallback shows the blurred image and stock
   login is still usable.
@@ -238,9 +311,10 @@ cd ~/Documents/fedora-changes/gdm-login-parity
 ./revert.sh
 ```
 
-This removes the dconf keyfile, extension, both wallpaper copies and the
-system cursor copy, then runs `dconf update`. The desktop and Super+L wallpaper
-are untouched. Log out and back in to return to the flat GDM screen.
+This removes the dconf keyfile, extension, both wallpaper copies, the system
+cursor copy and the generated `WhiteSur-GDM` icon theme, then runs
+`dconf update`. The desktop and Super+L wallpaper are untouched. Log out and
+back in to return to the flat GDM screen.
 
 ---
 
@@ -256,6 +330,9 @@ are untouched. Log out and back in to return to the flat GDM screen.
   authentication. Password/fingerprint/PAM paths are unchanged.
 - **Panel quick settings still exist.** The mockup has no visible top bar; a
   fully invisible bar would remove the only mouse-accessible power control.
+- **Top-bar icons use GDM's default size.** The generated `WhiteSur-GDM` theme
+  supplies the home artwork, but GDM keeps its 1.091em panel icon size, height
+  and spacing. Matching the home bar's 23 px size is a separate CSS/JS step.
 - **Clock format.** The large clock honours the greeter's `clock-format` but
   intentionally omits the AM/PM suffix: 12h renders `8:31`, 24h renders
   `20:31`. The date format is `%A %-d %B`.

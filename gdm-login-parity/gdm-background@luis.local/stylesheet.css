@@ -2,11 +2,12 @@
  * GDM login screen design, derived from ~/Downloads/log in.svg.
  *
  * Geometry at 1920x1080, scale 1.0:
- *   pill height        68.8 px  (34.4 px radius)
- *   gap between pills  15.2 px
- *   avatar             38 px
- *   name               24 px
- *   password pill      315.7 x 68.8 px
+ *   pill height        44 px  (22 px radius, 1 px border)
+ *   gap between pills  12 px
+ *   avatar             30 px
+ *   name               19 px
+ *   password pill      253 x 44 px
+ *   login row          441 x 44 px, 80 px above the bottom edge
  *   options            bottom right, 32 px inset
  *
  * The mockup's backdrop blur behind each pill is not available in St; the
@@ -80,9 +81,11 @@
     color: #ffffff;
     background-color: rgba(0, 0, 0, 0.30);
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 34.4px;
-    min-width: 183px;
-    padding: 15px 24px 15px 15px;
+    border-radius: 22px;
+    /* St sizes the content box: 149 + 25 padding + 2 border = 176 px. */
+    width: 149px;
+    height: 30px;
+    padding: 6px 19px 6px 6px;
 }
 
 .login-dialog .login-dialog-user-list-view .login-dialog-user-list .login-dialog-user-list-item:hover {
@@ -94,7 +97,7 @@
     color: #ffffff;
     background-color: rgba(0, 0, 0, 0.36);
     border-color: rgba(255, 255, 255, 0.22);
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.10) !important;
+    box-shadow: none !important;
 }
 
 .login-dialog .login-dialog-user-list-view .login-dialog-user-list .login-dialog-user-list-item:active {
@@ -102,16 +105,16 @@
 }
 
 .login-dialog .user-widget.horizontal {
-    spacing: 21px;
+    spacing: 17px;
 }
 
 .login-dialog .user-widget.horizontal .user-icon {
-    icon-size: 38px;
+    icon-size: 30px;
     border: 0 !important;
 }
 
 .login-dialog .user-widget.horizontal .user-widget-label {
-    font-size: 24px;
+    font-size: 19px;
     font-weight: 500;
     color: #ffffff;
 }
@@ -121,18 +124,29 @@
 /* ------------------------------------------------------------------ */
 
 .login-dialog .login-dialog-prompt-layout {
-    width: 555px;
-    height: 70px;
-    spacing: 15px;
+    width: 441px;
+    height: 44px;
+    spacing: 12px;
 }
 
 .login-dialog .login-dialog-prompt-layout .user-widget.horizontal {
     background-color: rgba(0, 0, 0, 0.30);
     border: 1px solid rgba(255, 255, 255, 0.10);
-    border-radius: 34.4px;
-    min-width: 183px;
-    padding: 15px 24px 15px 15px;
-    spacing: 21px;
+    border-radius: 22px;
+    /* St sizes the content box: 149 + 25 padding + 2 border = 176 px. */
+    width: 149px;
+    height: 30px;
+    padding: 6px 19px 6px 6px;
+    spacing: 17px;
+}
+
+.login-dialog .login-dialog-prompt-layout .user-icon {
+    icon-size: 30px !important;
+}
+
+.login-dialog .login-dialog-prompt-layout .user-widget.vertical .user-widget-label {
+    font-size: 19px;
+    font-weight: 500;
 }
 
 .login-dialog .login-dialog-prompt-layout .login-dialog-input-well {
@@ -140,24 +154,24 @@
 }
 
 .login-dialog .login-dialog-prompt-entry-area {
-    width: 316px;
-    height: 69px;
+    width: 253px;
+    height: 44px;
     margin: 0;
 }
 
 .login-dialog .login-dialog-button-box {
-    height: 69px;
+    height: 44px;
 }
 
 .login-dialog .login-dialog-prompt-entry {
-    width: 316px;
-    height: 69px;
+    width: 253px;
+    height: 44px;
     border: 1px solid rgba(255, 255, 255, 0.20);
-    border-radius: 34.4px;
+    border-radius: 22px;
     background-color: rgba(0, 0, 0, 0.30);
     color: #ffffff;
-    font-size: 24px;
-    padding: 0 54px 0 29px;
+    font-size: 19px;
+    padding: 0 43px 0 23px;
 }
 
 .login-dialog .login-dialog-prompt-entry:focus {
@@ -165,17 +179,17 @@
 }
 
 .login-dialog .login-dialog-prompt-entry :ltr {
-    padding-right: 54px;
+    padding-right: 43px;
 }
 
 .login-dialog .login-dialog-prompt-entry :rtl {
-    padding-left: 54px;
+    padding-left: 43px;
 }
 
 .login-dialog .login-dialog-button.next-button {
     color: rgba(255, 255, 255, 0.62) !important;
     padding: 0;
-    margin-right: 16px;
+    margin-right: 13px;
 }
 
 .login-dialog .login-dialog-message {
@@ -210,7 +224,7 @@
 #lockDialogGroup .login-dialog-button.login-dialog-auth-menu-button {
     background-color: transparent !important;
     border: 0;
-    padding: 6px 4px;
+    padding: 4px 3px;
     color: rgba(255, 255, 255, 0.85);
 }
 
@@ -219,23 +233,46 @@
 }
 
 .gdm-options-label {
-    font-size: 16px;
+    font-size: 12px;
     font-weight: 500;
     color: rgba(255, 255, 255, 0.85);
 }
 
 .gdm-options-chevron {
-    icon-size: 14px;
+    icon-size: 11px;
     color: rgba(255, 255, 255, 0.70);
 }
 
 .login-dialog-auth-menu-button-popup {
     min-width: 240px;
+    padding: 4px;
+}
+
+.login-dialog-auth-menu-button-popup .popup-menu-item {
+    font-size: 12px;
+    padding: 3px 10px;
+    spacing: 4px;
+    border-radius: 8px;
+}
+
+.login-dialog-auth-menu-button-popup .toggle-switch {
+    width: 32px;
+    height: 18px;
+}
+
+.login-dialog-auth-menu-button-popup .toggle-switch .handle {
+    width: 14px;
+    height: 14px;
+    margin: 2px;
+}
+
+.login-dialog-auth-menu-button-popup .toggle-switch StIcon {
+    icon-size: 12px;
 }
 
 .login-dialog-auth-menu-button-popup .gdm-options-header {
     color: rgba(255, 255, 255, 0.55);
-    font-size: 0.85em;
+    font-size: 10px;
     font-weight: 700;
 }
 

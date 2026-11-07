@@ -13,6 +13,9 @@ extension_root='/usr/local/share/gnome-shell/extensions'
 icons_root='/usr/local/share/icons'
 cursor_source="${HOME}/.local/share/icons/WhiteSur-cursors"
 cursor_name='WhiteSur-cursors'
+icon_white="${HOME}/.local/share/icons/WhiteSur"
+icon_custom="${HOME}/.local/share/icons/WhiteSur-System-Status-Custom"
+icon_name='WhiteSur-GDM'
 dconf_file='/etc/dconf/db/gdm.d/20-luis-login-parity'
 
 if [[ ! -f "$wallpaper" ]]; then
@@ -23,6 +26,20 @@ fi
 
 if [[ ! -d "$cursor_source" ]]; then
     printf 'Cursor theme not found: %s\n' "$cursor_source" >&2
+    exit 1
+fi
+
+for context in actions categories devices places status; do
+    if [[ ! -d "$icon_white/$context/symbolic" ]]; then
+        printf 'WhiteSur icon directory not found: %s\n' \
+            "$icon_white/$context/symbolic" >&2
+        exit 1
+    fi
+done
+
+if [[ ! -d "$icon_custom/status/symbolic" ]]; then
+    printf 'Custom status icon directory not found: %s\n' \
+        "$icon_custom/status/symbolic" >&2
     exit 1
 fi
 
@@ -80,6 +97,66 @@ sudo rm -rf "$icons_root/$cursor_name"
 sudo cp -a "$cursor_source" "$icons_root/"
 sudo chmod -R a+rX "$icons_root/$cursor_name"
 
+# Build the minimal icon theme for the GDM top bar.  The home bar uses
+# WhiteSur-System-Status-Custom over WhiteSur; the GDM copy keeps the exact
+# padded status artwork and the WhiteSur symbolic actions/devices/places used
+# by the panel's power, keyboard and menu icons.  Everything else falls back
+# to Adwaita.
+icon_tmp="$tmp/$icon_name"
+mkdir -p "$icon_tmp"
+for context in actions categories devices places status; do
+    mkdir -p "$icon_tmp/$context"
+    cp -a "$icon_white/$context/symbolic" "$icon_tmp/$context/"
+done
+cp -a "$icon_custom/status/symbolic/." "$icon_tmp/status/symbolic/"
+
+cat > "$icon_tmp/index.theme" <<'ICONEOF'
+[Icon Theme]
+Name=WhiteSur GDM
+Comment=Minimal WhiteSur symbolic set for the GDM top bar
+Inherits=Adwaita
+Directories=actions/symbolic,categories/symbolic,devices/symbolic,places/symbolic,status/symbolic
+
+[actions/symbolic]
+Size=16
+Context=Actions
+Type=Scalable
+MinSize=8
+MaxSize=512
+
+[categories/symbolic]
+Size=16
+Context=Categories
+Type=Scalable
+MinSize=8
+MaxSize=512
+
+[devices/symbolic]
+Size=16
+Context=Devices
+Type=Scalable
+MinSize=8
+MaxSize=512
+
+[places/symbolic]
+Size=16
+Context=Places
+Type=Scalable
+MinSize=8
+MaxSize=512
+
+[status/symbolic]
+Size=16
+Context=Status
+Type=Scalable
+MinSize=8
+MaxSize=512
+ICONEOF
+
+sudo rm -rf "$icons_root/$icon_name"
+sudo cp -a "$icon_tmp" "$icons_root/"
+sudo chmod -R a+rX "$icons_root/$icon_name"
+
 sudo tee "$dconf_file" >/dev/null <<'EOF'
 # Managed by ~/Documents/fedora-changes/gdm-login-parity/install.sh.
 # See revert.sh to undo.  The legacy 10-luis-login-screen file still sets
@@ -91,6 +168,7 @@ enabled-extensions=['gdm-background@luis.local']
 clock-format='12h'
 clock-show-weekday=true
 cursor-theme='WhiteSur-cursors'
+icon-theme='WhiteSur-GDM'
 accent-color='slate'
 color-scheme='prefer-dark'
 

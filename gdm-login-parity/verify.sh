@@ -7,6 +7,7 @@ extension_name='gdm-background@luis.local'
 background_dir='/usr/local/share/backgrounds/luishowin'
 extension_dir="/usr/local/share/gnome-shell/extensions/$extension_name"
 cursor_dir='/usr/local/share/icons/WhiteSur-cursors'
+icon_dir='/usr/local/share/icons/WhiteSur-GDM'
 wallpaper_uri='file:///usr/local/share/backgrounds/luishowin/wpp.jpg'
 
 fail=0
@@ -43,6 +44,11 @@ check_file "$extension_dir/metadata.json"
 check_file "$extension_dir/extension.js"
 check_file "$extension_dir/stylesheet.css"
 check_file "$cursor_dir/index.theme"
+check_file "$icon_dir/index.theme"
+check_file "$icon_dir/status/symbolic/network-wireless-symbolic.svg"
+check_file "$icon_dir/status/symbolic/battery-level-100-symbolic.svg"
+check_file "$icon_dir/actions/symbolic/system-shutdown-symbolic.svg"
+check_file "$icon_dir/devices/symbolic/input-keyboard-symbolic.svg"
 
 check_grep "$extension_dir/metadata.json" '"session-modes"[[:space:]]*:[[:space:]]*\["gdm"\]'
 check_grep "$extension_dir/extension.js" 'BackgroundManager'
@@ -51,6 +57,14 @@ check_grep "$extension_dir/extension.js" 'gdm-live-background'
 check_grep "$extension_dir/stylesheet.css" 'wpp-blur'
 check_grep "$extension_dir/stylesheet.css" 'login-dialog-prompt-entry'
 check_grep "$extension_dir/stylesheet.css" 'gdm-login-clock-time'
+check_grep "$extension_dir/stylesheet.css" 'width: 441px'
+check_grep "$extension_dir/stylesheet.css" 'width: 149px'
+check_grep "$extension_dir/stylesheet.css" 'height: 30px'
+check_grep "$extension_dir/stylesheet.css" 'width: 253px'
+check_grep "$extension_dir/stylesheet.css" 'font-size: 19px'
+check_grep "$extension_dir/stylesheet.css" 'width: 32px'
+check_grep "$extension_dir/stylesheet.css" 'font-size: 12px'
+check_grep "$extension_dir/extension.js" 'GREETER_BOTTOM_PADDING'
 
 if command -v magick >/dev/null; then
     for image in wpp.jpg wpp-blur.jpg; do
@@ -68,6 +82,7 @@ enabled=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/shell/enabled-extensions ||
 clock=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/clock-format || true)
 weekday=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/clock-show-weekday || true)
 cursor=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/cursor-theme || true)
+icon_theme=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/icon-theme || true)
 accent=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/accent-color || true)
 scheme=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/interface/color-scheme || true)
 background=$(DCONF_PROFILE="$tmp" dconf read /org/gnome/desktop/background/picture-uri || true)
@@ -96,6 +111,11 @@ fi
 
 if [[ "$cursor" != "'WhiteSur-cursors'" ]]; then
     printf 'unexpected gdm cursor-theme: %s\n' "$cursor" >&2
+    fail=1
+fi
+
+if [[ "$icon_theme" != "'WhiteSur-GDM'" ]]; then
+    printf 'unexpected gdm icon-theme: %s\n' "$icon_theme" >&2
     fail=1
 fi
 
@@ -138,5 +158,7 @@ printf '  wallpaper: %s\n' "$background_dir/wpp.jpg"
 printf '  fallback:  %s\n' "$background_dir/wpp-blur.jpg"
 printf '  clock:     12h, weekday\n'
 printf '  cursor:    WhiteSur-cursors\n'
+printf '  icons:     WhiteSur-GDM\n'
+printf '  layout:    441x44 pills, 80px from the bottom\n'
 printf '  accent:    slate\n'
 printf '%s\n' 'Log out and back in to start a fresh greeter.'

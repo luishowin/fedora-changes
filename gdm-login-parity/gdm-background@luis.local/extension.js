@@ -32,6 +32,8 @@ const CLOCK_FADE_TIME = 250;
 const CLOCK_TOP_FRACTION = 0.185;
 const DIALOG_RETRY_MS = 50;
 const DIALOG_RETRY_LIMIT = 200;
+const GREETER_BOTTOM_PADDING = 80;
+const AUTH_PROMPT_VERTICAL_OFFSET = 50;
 
 const BACKGROUND_SCHEMA = 'org.gnome.desktop.background';
 const INTERFACE_SCHEMA = 'org.gnome.desktop.interface';
@@ -126,6 +128,7 @@ export default class GdmLoginExtension extends Extension {
 
         if (this._authPrompt) {
             try {
+                this._authPrompt._userWell?.disconnectObject(this);
                 this._authPrompt.disconnectObject(this);
             } catch {
             }
@@ -134,6 +137,13 @@ export default class GdmLoginExtension extends Extension {
         if (this._dialog?._userList) {
             try {
                 this._dialog._userList.disconnectObject(this);
+            } catch {
+            }
+        }
+
+        if (this._dialog?._userSelectionBox) {
+            try {
+                this._dialog._userSelectionBox.disconnectObject(this);
             } catch {
             }
         }
@@ -241,6 +251,7 @@ export default class GdmLoginExtension extends Extension {
             this._createBackgroundActor();
             this._layoutBackgroundOverlays();
             this._updateClockPosition();
+            this._anchorLoginActors();
         }, this);
     }
 
@@ -390,7 +401,10 @@ export default class GdmLoginExtension extends Extension {
         this._syncClockVisibility();
 
         group.connectObject(
-            'notify::allocation', () => this._updateClockPosition(), this);
+            'notify::allocation', () => {
+                this._updateClockPosition();
+                this._anchorLoginActors();
+            }, this);
     }
 
     _updateClock() {
@@ -423,6 +437,30 @@ export default class GdmLoginExtension extends Extension {
         this._clock.set_position(
             Math.round((width - natWidth) / 2),
             Math.round(height * CLOCK_TOP_FRACTION));
+    }
+
+    _anchorLoginActors() {
+        const fallbackHeight = Main.layoutManager.primaryMonitor?.height ?? 0;
+        const height = this._screenShieldGroup?.height || fallbackHeight;
+        if (!height)
+            return;
+
+        // LoginDialog allocates its children around the screen centre.  A
+        // translation moves the user pill and the auth prompt down without
+        // fighting the dialog's own allocation logic.
+        const userBox = this._dialog?._userSelectionBox;
+        if (userBox?.visible && userBox.height > 0) {
+            userBox.translation_y = Math.round(
+                height / 2 - GREETER_BOTTOM_PADDING - userBox.height / 2);
+        }
+
+        const prompt = this._authPrompt;
+        if (prompt?.visible && prompt.height > 0) {
+            // The stock auth prompt is offset 50 px below the centre.
+            prompt.translation_y = Math.round(
+                height / 2 - AUTH_PROMPT_VERTICAL_OFFSET
+                - GREETER_BOTTOM_PADDING - prompt.height / 2);
+        }
     }
 
     _syncClockVisibility() {
@@ -522,7 +560,17 @@ export default class GdmLoginExtension extends Extension {
 
         this._setupSingleUserLink(dialog);
 
+        if (dialog._userSelectionBox) {
+            dialog._userSelectionBox.connectObject(
+                'notify::height', () => this._anchorLoginActors(), this);
+            dialog._userSelectionBox.connectObject(
+                'notify::visible', () => this._anchorLoginActors(), this);
+        }
+
         if (this._authPrompt) {
+            this._authPrompt._userWell?.connectObject(
+                'notify::child', () => this._stylePromptUserWidget(), this);
+
             this._authPrompt.connectObject(
                 'notify::visible', () => {
                     this._styleAuthPrompt();
@@ -535,10 +583,14 @@ export default class GdmLoginExtension extends Extension {
                     this._syncClockVisibility();
                 }, this);
 
+            this._authPrompt.connectObject(
+                'notify::height', () => this._anchorLoginActors(), this);
+
             this._styleAuthPrompt();
         }
 
         this._setupOptions(dialog);
+        this._anchorLoginActors();
         this._syncClockVisibility();
     }
 
@@ -591,6 +643,28 @@ export default class GdmLoginExtension extends Extension {
         userWidget.x_align = Clutter.ActorAlign.CENTER;
     }
 
+    _stylePromptUserWidget() {
+        const prompt = this._authPrompt;
+        const userWell = prompt?._userWell;
+        const userWidget = userWell?.get_child();
+        if (!userWidget)
+            return;
+
+        userWidget.orientation = Clutter.Orientation.HORIZONTAL;
+        userWidget.remove_style_class_name('vertical');
+        userWidget.add_style_class_name('horizontal');
+        userWidget.x_align = Clutter.ActorAlign.CENTER;
+
+        // The Avatar constructor starts at 64 px and the Shell's vertical
+        // rule uses 160 px.  Set the final size immediately so a transition
+        // frame cannot paint the larger avatar before the style pass.
+        const avatar = userWidget.get_first_child();
+        if (avatar) {
+            const {scaleFactor} = St.ThemeContext.get_for_stage(global.stage);
+            avatar.set_size(30 * scaleFactor, 30 * scaleFactor);
+        }
+    }
+
     _styleAuthPrompt() {
         const prompt = this._authPrompt;
         if (!prompt)
@@ -600,22 +674,15 @@ export default class GdmLoginExtension extends Extension {
         prompt.x_expand = false;
         prompt.y_expand = false;
         prompt.x_align = Clutter.ActorAlign.CENTER;
-        prompt.translation_y = -50;
 
         const userWell = prompt._userWell;
         if (userWell) {
             userWell.x_expand = false;
             userWell.y_expand = false;
             userWell.x_align = Clutter.ActorAlign.START;
-            userWell.y_align = Clutter.ActorAlign.CENTER;
+            userWell.y_align = Clutter.ActorAlign.START;
 
-            const userWidget = userWell.get_child();
-            if (userWidget) {
-                userWidget.orientation = Clutter.Orientation.HORIZONTAL;
-                userWidget.remove_style_class_name('vertical');
-                userWidget.add_style_class_name('horizontal');
-                userWidget.x_align = Clutter.ActorAlign.CENTER;
-            }
+            this._stylePromptUserWidget();
 
             if (!userWell._gdmClickAction) {
                 userWell.reactive = true;
@@ -672,6 +739,8 @@ export default class GdmLoginExtension extends Extension {
             }
             cancel.hide();
         }
+
+        this._anchorLoginActors();
     }
 
     /* ------------------------------------------------------------------ */
