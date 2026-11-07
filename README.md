@@ -27,13 +27,14 @@ the part you cannot re-derive from a diff six months later.
 |---|---|---|
 | 2026-09-12 | [Nautilus "Copy Path" — in-process clipboard + GPaste](2026-09-12-nautilus-clipboard.md) | retired — GPaste and nautilus-python removed on F45 |
 | 2026-09-12 | [Top bar clock — the weekday, and what the macOS reference already matched](2026-09-12-top-bar-clock-weekday.md) | live — the `clock-show-weekday` setting survives |
-| 2026-09-12 | [Clock — macOS date/time spacing, and greeter parity](2026-09-12-clock-gap-and-greeter.md) | retired — `topbar-clock` removed on F45; greeter half superseded by the 2026-11-05 GDM entry |
+| 2026-09-12 | [Clock — macOS date/time spacing, and greeter parity](2026-09-12-clock-gap-and-greeter.md) | retired — `topbar-clock` removed on F45; greeter half superseded by the 2026-11-07 GDM entry |
 | 2026-11-04 | [Fedora 45 upgrade — dead extensions, caches and stale state](2026-11-04-fedora-45-upgrade.md) | live — cleanup complete |
 | 2026-11-04 | [Cleanup follow-up — the kernel meta-package trap](2026-11-04-cleanup-followup.md) | live — corrected removal executed |
 | 2026-11-04 | [Top bar and Control Center — weight, icon size, blur, corners](2026-11-04-panel-and-control-center.md) | live — blur half revised by the entry below |
 | 2026-11-04 | [Control Center live blur — show the app, not the wallpaper](2026-11-04-control-center-live-blur.md) | live |
 | 2026-11-04 | [Power profile icon — leaf, bolt, and a 23 px panel](2026-11-04-power-profile-icons.md) | live |
-| 2026-11-05 | [GDM login screen — wallpaper, clock and cursor parity](2026-11-05-gdm-login-parity.md) | live |
+| 2026-11-05 | [GDM login screen — wallpaper, clock and cursor parity](2026-11-05-gdm-login-parity.md) | superseded by the 2026-11-07 rebuild |
+| 2026-11-07 | [GDM greeter — minimal single-user rebuild](2026-11-07-gdm-login-rebuild.md) | source complete — reinstall and log out to apply the refinements |
 | 2026-11-04 | [Terminal prompt — `luishowin >`](2026-11-04-terminal-prompt.md) | live |
 | 2026-11-04 | [Public repo — `luishowin/fedora-changes`](2026-11-04-public-repo.md) | live |
 
@@ -60,8 +61,8 @@ The customisation surface of this machine, in one table.
 | | |
 |---|---|
 | `~/.local/share/gnome-shell/extensions/` | user extensions: `panel-tweaks@luis.local`, and the user copy of Blur My Shell that shadows the incomplete Fedora RPM |
-| `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only extension that puts the wallpaper behind the login dialog |
-| `/usr/local/share/backgrounds/luishowin/` | clear and pre-blurred `wpp.jpg` used by the GDM greeter |
+| `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only login extension: live wallpaper, large clock, avatar/password pills, Options |
+| `/usr/local/share/backgrounds/luishowin/` | clear `wpp.jpg` for live blur plus a pre-blurred fallback for the GDM greeter |
 | `/usr/local/share/icons/WhiteSur-cursors/` | system copy of the cursor theme, for the GDM greeter |
 | `~/.themes/WhiteSur-Dark/` | GTK3 theme. There is no shell theme on F45 — the User Themes extension is not installed |
 | `~/.config/gtk-4.0/gtk.css` | libadwaita overrides, guarded by `@media (prefers-color-scheme: dark)` |
@@ -128,6 +129,11 @@ Collected across entries, because each one has cost time more than once.
   `#lockDialogGroup { background-color: #222226 }`. The user's wallpaper/themes are also
   unreachable because `/home/luishowin` is mode `700`. A GDM-only extension with
   `"session-modes": ["gdm"]` is the clean place to add a login background.
+- **GDM's `LoginDialog` is not the lock screen's `UnlockDialog`.** The greeter has its own
+  `UserList`/`AuthPrompt` and no large-clock actor. Matching the lock screen means reaching
+  into `_authPrompt`, `_userWell`, `_inputWell` and `_authMenuButton` from the GDM extension;
+  those names are internal and version-pinned. The extension loads only in GDM, so a failure
+  affects the greeter, not the user session, and leaves stock login usable.
 - **`DCONF_PROFILE=gdm dconf read` as the user is misleading.** `/usr/share/dconf/profile/gdm`
   starts with `user-db:user`, so that command reads your user database first and appears to show
   the user's background/themes. To see what the greeter actually sees, use a temporary profile

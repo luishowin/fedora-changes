@@ -1,42 +1,87 @@
-# GDM Login Parity
+# GDM Login
 
-Makes the GDM logout/login screen look closer to the Super+L lock screen:
-the supplied wallpaper behind the login dialog, the 12-hour weekday clock,
-and the WhiteSur cursor. Built for Fedora 45 / GNOME Shell 51.1.
+Rebuilds the Fedora 45 / GDM 51 logout screen around the **minimal single-user
+layout** in `~/Downloads/log in.svg`, with the large clock treatment from
+`~/Downloads/slate desktop.svg`.
 
-The package is intentionally scoped to GDM. It does **not** change the
-desktop wallpaper, the lock-screen wallpaper, the GTK theme or the icon theme.
+The greeter shows:
 
-## Why the login screen is normally flat
+- the supplied `wpp.jpg` wallpaper with a live 10 px blur and a 20% black scrim;
+- a large time and date at the top;
+- one centred avatar/name pill;
+- after clicking the avatar, the avatar pill plus a password pill side by side;
+- the password pill keeps the submit chevron but drops the stock peek/eye icon,
+  so the full “Password” hint fits;
+- one **Options** menu at the bottom right;
+- a transparent top bar with the quick-settings/power control still available.
 
-The logout screen and the Super+L lock screen are different programs:
+The clock fades out when authentication begins and fades back in when the user
+returns to the avatar state.
 
-- Super+L locks the running user session. `UnlockDialog` creates a
-  `Background.BackgroundManager` over `#lockDialogGroup` and applies a
-  `Shell.BlurEffect` (`BLUR_RADIUS = 90`, `BLUR_BRIGHTNESS = 0.65`).
-- Logging out starts the GDM greeter: a separate `gnome-shell --mode=gdm`
-  process running as the `gdm` user with its own dconf profile.
-- `layout.js` skips background creation for greeters, and `LoginDialog` does
-  not create one. The shell theme therefore leaves `#lockDialogGroup` at its
-  flat `#222226` colour.
-- GDM cannot read the user's home directory (`/home/luishowin` is mode `700`),
-  so the user's wallpaper and themes are unavailable even if its dconf pointed
-  at them.
+The prompt row is fixed at **555 px** for the current `luishowin` account:
+224 px user pill + 15 px gap + 316 px password pill. The avatar has a 15 px
+inset on all sides, and the password entry keeps only the submit chevron; its
+stock peek/eye icon is disabled. The live background uses one full-screen 20%
+black scrim, so there is no mid-screen overlay boundary.
 
-The fix is a small GDM-only extension whose stylesheet gives
-`#lockDialogGroup` the pre-blurred wallpaper. GDM does load system extensions
-from `/usr/local/share` when they are enabled in its own dconf and their
-metadata declares `"session-modes": ["gdm"]`.
+The package is intentionally scoped to GDM. It does **not** change the desktop
+wallpaper, the Super+L lock screen, the GTK theme or the icon theme.
 
-## What it installs
+## Why this needs an extension, not a setting
 
-| path | purpose |
-|---|---|
-| `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only stylesheet extension |
-| `/usr/local/share/backgrounds/luishowin/wpp.jpg` | clear 1920×1080 copy of the source |
-| `/usr/local/share/backgrounds/luishowin/wpp-blur.jpg` | sigma-40, 65%-brightness copy used by GDM |
-| `/usr/local/share/icons/WhiteSur-cursors/` | system copy of the user's cursor theme |
-| `/etc/dconf/db/gdm.d/20-luis-login-parity` | enables the extension; sets clock and cursor |
+GDM is `gnome-shell --mode=gdm`, a separate process running as the `gdm` user
+with its own dconf profile. The Super+L lock screen is the running user
+session's `UnlockDialog`. They are different classes with different actors:
+
+| | Super+L lock screen | GDM login screen |
+|---|---|---|
+| class | `UnlockDialog` | `LoginDialog` |
+| clock | `.unlock-dialog-clock` | panel date menu (unless removed) |
+| user selector | single user + prompt | `UserList` + `AuthPrompt` |
+| background | live `BackgroundManager` | none |
+| home directory | full | none (`/home/luishowin` is mode `700`) |
+
+GDM does load system extensions when their metadata declares
+`"session-modes": ["gdm"]` and their UUID is in the greeter's
+`org.gnome.shell enabled-extensions` key. That is the supported hook this
+package uses.
+
+The extension does four things:
+
+1. creates a live blurred wallpaper actor, matching the `UnlockDialog`
+   `BackgroundManager` + `Shell.BlurEffect` pattern;
+2. adds the large time/date and fades it when `AuthPrompt.visible` changes;
+3. turns the single user item into the avatar pill and, once the auth prompt
+   appears, lays the user pill and password entry out horizontally;
+4. relabels the login-options button to **Options** and puts the accessibility
+   toggles and power actions into its existing popup menu.
+
+Everything optional is guarded. If an internal actor disappears in a future
+Shell version, the extension logs the problem and stock GDM login still works.
+
+## Install
+
+The script writes to `/usr/local/share`, `/etc/dconf` and runs `dconf update`,
+so it needs sudo. Run it as your user, **not** with `sudo ./install.sh`, so it
+can read `~/Downloads/wpp.jpg` and `~/.local/share/icons/WhiteSur-cursors`:
+
+```bash
+cd ~/Documents/fedora-changes/gdm-login-parity
+./install.sh
+```
+
+By default it reads `~/Downloads/wpp.jpg` and crops it to 1920×1080. Pass
+another path as the first argument. The image treatment is configurable:
+
+```bash
+./install.sh ~/Pictures/login.jpg
+BLUR=14 DIM=24 ./install.sh
+```
+
+`BLUR` controls the pre-blurred CSS fallback (ImageMagick sigma). `DIM` controls
+its brightness. The live `Shell.BlurEffect` in `extension.js` uses the
+`BLUR_RADIUS = 10` constant; the live scrim is always one full-screen 20%
+black layer. The fallback image has the same 20% dim baked in.
 
 The greeter dconf block is:
 
@@ -48,34 +93,17 @@ enabled-extensions=['gdm-background@luis.local']
 clock-format='12h'
 clock-show-weekday=true
 cursor-theme='WhiteSur-cursors'
+accent-color='slate'
+color-scheme='prefer-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/local/share/backgrounds/luishowin/wpp.jpg'
+picture-uri-dark='file:///usr/local/share/backgrounds/luishowin/wpp.jpg'
+picture-options='zoom'
 ```
 
 The existing `/etc/dconf/db/gdm.d/10-luis-login-screen` is left alone; it still
 sets `[org/gnome/login-screen] logo=''`.
-
-## Install
-
-The script writes to `/usr/local/share`, `/etc/dconf` and runs `dconf update`,
-so it needs sudo. Run it as your user, not with `sudo ./install.sh`, so it can
-read `~/Downloads/wpp.jpg` and `~/.local/share/icons/WhiteSur-cursors`:
-
-```bash
-cd ~/Documents/fedora-changes/gdm-login-parity
-./install.sh
-```
-
-By default it reads `~/Downloads/wpp.jpg`. Pass another path as the first
-argument, or override the image treatment:
-
-```bash
-./install.sh ~/Pictures/login.jpg
-SIGMA=60 BRIGHTNESS=65 ./install.sh
-```
-
-`SIGMA` is the ImageMagick Gaussian sigma, not the Clutter blur radius. The
-default 40 is the closest reasonable stand-in for the lock screen's radius-90
-blur without turning the image into a flat gradient. The source is cropped to
-1920×1080; the display is 1920×1080 at scale 1.0.
 
 ## Verify
 
@@ -83,12 +111,24 @@ blur without turning the image into a flat gradient. The source is cropped to
 ./verify.sh
 ```
 
-It checks the extension, both wallpaper copies, the cursor theme, and the
-greeter dconf values using a **system-only** dconf profile. It does not need
-sudo.
+It checks the extension, both wallpaper copies, the cursor theme, the design
+tokens in the CSS/JS, and the greeter dconf values using a **system-only**
+dconf profile.
 
 Log out and back in after installing. The greeter is started fresh at logout;
 there is no need to restart GDM (which would kill the session).
+
+Checklist after the logout:
+
+- the woodshop wallpaper is visible and blurred, with the large clock;
+- the avatar pill is centred;
+- clicking the avatar fades the clock and shows the password pill beside it;
+- the password entry is focused;
+- a wrong password shows the usual error below the row;
+- clicking the avatar again returns to the user-list state and fades the clock
+  back in;
+- **Options** opens accessibility toggles, Switch User, Restart and Power Off;
+- the top-right quick settings/power control still works.
 
 **Misleading check:** do not verify with
 
@@ -97,8 +137,8 @@ DCONF_PROFILE=gdm dconf read /org/gnome/desktop/interface/clock-format
 ```
 
 as your user. The gdm profile starts with `user-db:user`, so that command reads
-your user database, not the greeter's. Use `DCONF_PROFILE=/tmp/gdm-only` with
-only the system databases, as `verify.sh` does.
+your user database, not the greeter's. Use a system-only profile, as
+`verify.sh` does.
 
 ## Revert
 
@@ -110,26 +150,38 @@ only the system databases, as `verify.sh` does.
 
 It removes the dconf keyfile, extension, images and system cursor copy, then
 runs `dconf update`. The desktop and lock-screen wallpaper are untouched. Log
-out and back in to return to the flat `#222226` GDM background.
+out and back in to return to the flat GDM background.
 
 ## Known gaps
 
-- The login screen still uses GDM's user-list/password layout. It will not
-  become the single-user unlock prompt with the large clock.
-- The GDM clock is the panel clock, not the lock screen's `unlock-dialog-clock`.
-  It now reads 12-hour time with a weekday, but the layout differs.
-- The blur is pre-rendered. If the source wallpaper changes, re-run
-  `install.sh`; GDM has no live background actor to attach an effect to.
-- GDM does not load the user's session extensions (`panel-tweaks`, Blur My
-  Shell). Only the GDM-only extension's stylesheet applies.
-- The wallpaper and cursor theme are world-readable under `/usr/local/share`.
-  `wpp.jpg` is a forest wallpaper rather than a personal photo; if that
-  changes, move the image to a gdm-private path and update the stylesheet.
-- The source image is not committed to this repository. The installed copies
-  remain if `~/Downloads/wpp.jpg` is deleted; re-running the installer then
-  needs the source again.
-- The cursor theme is a system-wide copy. Changes to
+- **St cannot blur behind an individual actor.** The wallpaper is genuinely
+  blurred, but the pills use a 30% black fill, a 1 px white border and the
+  rounded geometry from the mockup; they are not true local backdrop-blur
+  surfaces.
+- **The single-user layout uses internal Shell actors.** `_authPrompt`,
+  `_userWell`, `_inputWell`, `_authMenuButton`, `_onUserListActivated` and
+  `_showUserList` are stable in Shell 51.1 but not a public extension API.
+  `metadata.json` therefore declares only shell version `51`.
+- **The login flow is still GDM's.** The avatar click uses GDM's normal
+  `AuthPrompt`; the extension changes layout, not authentication. Passwords,
+  fingerprint/other PAM methods, retries and cancellation are unchanged.
+- **The real account is used.** The mockup's “Anna” is a placeholder; the
+  pill reads the current AccountsService avatar and name.
+- **The clock honours the gdm clock format without an AM/PM suffix.** It is
+  currently 12h and renders a bare `8:31` (matching the mockup); 24h renders
+  `20:31`. Change `clock-format` in the gdm dconf keyfile if you want the other
+  form. The panel's centre clock is hidden so it does not duplicate the large
+  clock.
+- **The top bar is not completely invisible.** The reference mockup has no bar;
+  this package keeps the transparent panel with the quick-settings/power
+  control so the greeter is recoverable without a keyboard shortcut.
+- **The source image is not in the repository.** The installed copies remain
+  if `~/Downloads/wpp.jpg` is deleted; re-running the installer then needs the
+  source again.
+- **The cursor is a snapshot.** Changes to
   `~/.local/share/icons/WhiteSur-cursors` require re-running `install.sh`.
-- The `#lockDialogGroup` selector is stable in GNOME Shell 51.1. A future
-  shell theme could rename it; `verify.sh` will still pass because it checks
-  the files, not the rendered pixels.
+- **The wallpaper is world-readable.** `/usr/local/share` is readable by every
+  local user. It is the woodshop wallpaper; if a personal image is used later,
+  move it to a gdm-private location and update the stylesheet/installer.
+- **`#lockDialogGroup` and the CSS classes are Shell-theme details.** A future
+  GNOME version could rename them; `verify.sh` checks files, not pixels.

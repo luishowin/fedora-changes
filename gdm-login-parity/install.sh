@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Install the GDM-only wallpaper, clock and cursor parity package.
+# Install the GDM login screen package.
 set -euo pipefail
 
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 extension_name='gdm-background@luis.local'
 wallpaper="${1:-${HOME}/Downloads/wpp.jpg}"
-sigma="${SIGMA:-40}"
-brightness="${BRIGHTNESS:-65}"
+blur="${BLUR:-10}"
+dim="${DIM:-20}"
 
 background_dir='/usr/local/share/backgrounds/luishowin'
 extension_root='/usr/local/share/gnome-shell/extensions'
@@ -40,21 +40,30 @@ if ! command -v sudo >/dev/null; then
     exit 1
 fi
 
+if ! [[ "$blur" =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+    printf 'BLUR must be a number, got: %s\n' "$blur" >&2
+    exit 1
+fi
+
+if ! [[ "$dim" =~ ^[0-9]+$ ]] || (( dim < 0 || dim > 80 )); then
+    printf 'DIM must be an integer between 0 and 80, got: %s\n' "$dim" >&2
+    exit 1
+fi
+
 sudo -v
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-# The session renders at 1920x1080 at scale 1.0.  Crop to 16:9 and keep the
-# GDM copy close to the unlock dialog's effects: BLUR_RADIUS=90,
-# BLUR_BRIGHTNESS=0.65.  A pre-rendered blur is required because GDM's login
-# dialog does not create a background actor on which to put a live effect.
+# The reference design is 1920x1080 at scale 1.0.  The clear copy feeds the
+# live BackgroundManager in extension.js; the blurred copy is the CSS fallback
+# if the extension's JavaScript side cannot run.
 "$image_tool" "$wallpaper" \
     -auto-orient -resize '1920x1080^' -gravity center -extent 1920x1080 \
     -strip -quality 90 "$tmp/wpp.jpg"
 
 "$image_tool" "$tmp/wpp.jpg" \
-    -blur "0x${sigma}" -modulate "${brightness},100,100" \
+    -blur "0x${blur}" -modulate "$((100 - dim)),100,100" \
     -strip -quality 90 "$tmp/wpp-blur.jpg"
 
 sudo install -d -m 755 \
@@ -82,12 +91,20 @@ enabled-extensions=['gdm-background@luis.local']
 clock-format='12h'
 clock-show-weekday=true
 cursor-theme='WhiteSur-cursors'
+accent-color='slate'
+color-scheme='prefer-dark'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/local/share/backgrounds/luishowin/wpp.jpg'
+picture-uri-dark='file:///usr/local/share/backgrounds/luishowin/wpp.jpg'
+picture-options='zoom'
 EOF
 
 sudo dconf update
 
 "$script_dir/verify.sh"
 
-printf '\n%s\n' 'Installed the GDM login-screen parity package.'
+printf '\n%s\n' 'Installed the GDM login package.'
 printf '%s\n' 'Log out and back in to start a fresh greeter and see it.'
-printf '%s\n' "Blur: sigma ${sigma}, brightness ${brightness}%. Override with SIGMA=... BRIGHTNESS=... ./install.sh"
+printf 'Fallback blur: %s px; dim: %s%%. Override with BLUR=... DIM=... ./install.sh\n' \
+    "$blur" "$dim"
