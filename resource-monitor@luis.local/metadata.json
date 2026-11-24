@@ -1,0 +1,7 @@
+{
+  "uuid": "resource-monitor@luis.local",
+  "name": "Resource Monitor",
+  "description": "Compact CPU, memory, storage and network readouts in the top bar, with a per-drive space breakdown.",
+  "shell-version": ["45", "46", "47", "48", "49", "50", "51"],
+  "settings-schema": "org.gnome.shell.extensions.resource-monitor"
+}

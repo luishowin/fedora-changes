@@ -37,6 +37,8 @@ the part you cannot re-derive from a diff six months later.
 | 2026-11-07 | [GDM greeter — minimal single-user rebuild](2026-11-07-gdm-login-rebuild.md) | source complete — reinstall and log out to apply the refinements |
 | 2026-11-04 | [Terminal prompt — `luishowin >`](2026-11-04-terminal-prompt.md) | live |
 | 2026-11-04 | [Public repo — `luishowin/fedora-changes`](2026-11-04-public-repo.md) | live |
+| 2026-11-24 | [Resource monitor — compact CPU, RAM, disk and network in the top bar](2026-11-24-resource-monitor.md) | live — loads at the next login |
+| 2026-11-25 | [Resource monitor settings — per-metric visibility toggles](2026-11-25-resource-monitor-settings.md) | live |
 
 ---
 
@@ -50,7 +52,7 @@ what it is missing; backfill as each one next gets touched.
 | **WhiteSur-Dark** GTK3 theme — the shell-theme half did not survive the F45 upgrade | `~/.themes/WhiteSur-Dark/` | 2026-10-07 |
 | libadwaita variable overrides, matching the same neutral-grey design system | `~/.config/gtk-4.0/gtk.css` | 2026-10-08 |
 | WhiteSur icons, cursors, and the custom system-status icon theme | `~/.local/share/icons/` | 2026-10-20 |
-| 8 Shell extensions — 7 maintained plus `panel-tweaks@luis.local` | `org.gnome.shell enabled-extensions` | 2026-11-04 |
+| 9 Shell extensions — 8 maintained plus `panel-tweaks@luis.local` | `org.gnome.shell enabled-extensions` | 2026-11-25 |
 
 ---
 
@@ -60,7 +62,7 @@ The customisation surface of this machine, in one table.
 
 | | |
 |---|---|
-| `~/.local/share/gnome-shell/extensions/` | user extensions: `panel-tweaks@luis.local`, and the user copy of Blur My Shell that shadows the incomplete Fedora RPM |
+| `~/.local/share/gnome-shell/extensions/` | user extensions: `panel-tweaks@luis.local`, `resource-monitor@luis.local`, and the user copy of Blur My Shell that shadows the incomplete Fedora RPM |
 | `/usr/local/share/gnome-shell/extensions/gdm-background@luis.local/` | GDM-only login extension: live wallpaper, large clock, avatar/password pills, Options |
 | `/usr/local/share/backgrounds/luishowin/` | clear `wpp.jpg` for live blur plus a pre-blurred fallback for the GDM greeter |
 | `/usr/local/share/icons/WhiteSur-cursors/` | system copy of the cursor theme, for the GDM greeter |

@@ -1,0 +1,59 @@
+/*
+ * The panel group deliberately uses text instead of symbolic icons: the
+ * WhiteSur system-status icons are 22x22 with a 16x16 optical box, while
+ * panel icon sizes are driven by Just Perfection. Text avoids that mismatch.
+ */
+.resource-monitor {
+    -natural-hpadding: 10px;
+    -minimum-hpadding: 6px;
+}
+
+.resource-monitor-box {
+    spacing: 8px;
+}
+
+.resource-monitor-metric {
+    spacing: 4px;
+}
+
+.resource-monitor-name {
+    font-size: 0.84em;
+    font-weight: 500;
+    opacity: 0.68;
+}
+
+.resource-monitor-placeholder {
+    font-size: 0.84em;
+    font-weight: 600;
+    opacity: 0.72;
+}
+
+.resource-monitor-value {
+    min-width: 2.6em;
+    font-weight: 600;
+    font-feature-settings: "tnum" 1;
+    text-align: right;
+}
+
+.resource-monitor-net {
+    min-width: 7.1em;
+}
+
+.resource-monitor-separator {
+    width: 1px;
+    height: 12px;
+    background-color: rgba(255, 255, 255, 0.22);
+}
+
+.resource-monitor-menu-row {
+    spacing: 16px;
+}
+
+.resource-monitor-menu-name {
+    opacity: 0.72;
+}
+
+.resource-monitor-menu-value {
+    font-weight: 600;
+    font-feature-settings: "tnum" 1;
+}

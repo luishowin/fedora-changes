@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.resource-monitor"
+          path="/org/gnome/shell/extensions/resource-monitor/">
+
+    <key name="show-cpu" type="b">
+      <default>true</default>
+      <summary>Show CPU usage</summary>
+      <description>Show the CPU percentage in the panel and the CPU row in the dropdown.</description>
+    </key>
+
+    <key name="show-memory" type="b">
+      <default>true</default>
+      <summary>Show memory usage</summary>
+      <description>Show the RAM percentage in the panel and the memory row in the dropdown.</description>
+    </key>
+
+    <key name="show-storage" type="b">
+      <default>true</default>
+      <summary>Show storage usage</summary>
+      <description>Show root filesystem usage in the panel and the Storage row in the dropdown.</description>
+    </key>
+
+    <key name="show-network" type="b">
+      <default>true</default>
+      <summary>Show network throughput</summary>
+      <description>Show download and upload rates in the panel and the Network row in the dropdown.</description>
+    </key>
+
+    <key name="show-disks" type="b">
+      <default>true</default>
+      <summary>Show drive breakdown</summary>
+      <description>Show the per-drive used and total space section in the dropdown.</description>
+    </key>
+
+  </schema>
+</schemalist>
