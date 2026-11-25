@@ -108,7 +108,9 @@ for context in actions categories devices places status; do
     mkdir -p "$icon_tmp/$context"
     cp -a "$icon_white/$context/symbolic" "$icon_tmp/$context/"
 done
-cp -a "$icon_custom/status/symbolic/." "$icon_tmp/status/symbolic/"
+# WhiteSur ships aliases as symlinks; replace them instead of writing the
+# overlay through the link, or the artwork lands in the link target.
+cp -a --remove-destination "$icon_custom/status/symbolic/." "$icon_tmp/status/symbolic/"
 
 cat > "$icon_tmp/index.theme" <<'ICONEOF'
 [Icon Theme]

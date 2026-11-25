@@ -50,6 +50,24 @@ check_file "$icon_dir/status/symbolic/battery-level-100-symbolic.svg"
 check_file "$icon_dir/actions/symbolic/system-shutdown-symbolic.svg"
 check_file "$icon_dir/devices/symbolic/input-keyboard-symbolic.svg"
 
+# The GDM status icons must be byte-identical copies of the home theme, not
+# WhiteSur's alias symlinks with the artwork written through them.
+custom_status="${HOME}/.local/share/icons/WhiteSur-System-Status-Custom/status/symbolic"
+if [[ -d "$custom_status" ]]; then
+    for source in "$custom_status"/*.svg; do
+        name=$(basename "$source")
+        installed="$icon_dir/status/symbolic/$name"
+        if [[ -L "$installed" ]]; then
+            printf 'status icon is a symlink: %s -> %s\n' \
+                "$name" "$(readlink "$installed")" >&2
+            fail=1
+        elif ! cmp -s "$source" "$installed"; then
+            printf 'status icon differs from the home theme: %s\n' "$name" >&2
+            fail=1
+        fi
+    done
+fi
+
 check_grep "$extension_dir/metadata.json" '"session-modes"[[:space:]]*:[[:space:]]*\["gdm"\]'
 check_grep "$extension_dir/extension.js" 'BackgroundManager'
 check_grep "$extension_dir/extension.js" 'gdm-login-clock'
