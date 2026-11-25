@@ -39,6 +39,7 @@ the part you cannot re-derive from a diff six months later.
 | 2026-11-04 | [Public repo — `luishowin/fedora-changes`](2026-11-04-public-repo.md) | live |
 | 2026-11-24 | [Resource monitor — compact CPU, RAM, disk and network in the top bar](2026-11-24-resource-monitor.md) | live — loads at the next login |
 | 2026-11-25 | [Resource monitor settings — per-metric visibility toggles](2026-11-25-resource-monitor-settings.md) | live |
+| 2026-11-25 | [Battery icon at full charge — green fill and bolt](2026-11-25-battery-fully-charged-icon.md) | live |
 
 ---
 

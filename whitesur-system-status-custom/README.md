@@ -14,9 +14,10 @@ and no administrator access is required.
 ## What was created
 
 - `index.theme` defines the new theme and its `WhiteSur` fallback.
-- `status/symbolic/` contains 72 renamed copies of the supplied SVGs plus four
-  power-profile SVGs (the supplied leaf, the authored bolt and their RTL
-  mirrors). The names are the ones GNOME Shell looks up for status indicators.
+- `status/symbolic/` contains 72 renamed copies of the supplied SVGs plus five
+  authored ones: the power-profile leaf and bolt with their RTL mirrors, and
+  the green fully-charged battery. The names are the ones GNOME Shell looks up
+  for status indicators.
 - `panel-status-icons.txt` lists the 41 remaining GNOME 51 panel indicators
   that are padded at install time from the installed WhiteSur theme.
 - `pad-status-icons.sh` and `pad-status-icons.py` generate those padded
@@ -44,7 +45,9 @@ the package provides an explicit compatibility layer:
 - Battery: the supplied 0–100 percent assets (and charging equivalents) map to
   GNOME's `battery-level-*-symbolic`, charging, and plugged-in names. Semantic
   states such as empty, low, full, charged, caution, missing, and action use
-  the corresponding supplied asset.
+  the corresponding supplied asset. The fully-charged state (`battery-level-100-charged-symbolic`,
+  which is what UPower reports at 100 % on AC) reuses the charging artwork with a
+  green fill; see [`2026-11-25-battery-fully-charged-icon.md`](../2026-11-25-battery-fully-charged-icon.md).
 - Power mode: the power-saver and performance states use the supplied leaf and
   the authored bolt; balanced keeps WhiteSur's gauge because the panel hides the
   indicator in balanced mode and only Quick Settings uses it.
