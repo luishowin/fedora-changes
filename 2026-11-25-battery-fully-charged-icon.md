@@ -80,4 +80,5 @@ git revert <this commit>   # or: git apply -R battery-full-charged.patch
 - The 100 % charging and plugged-in icons are still white-filled; only the fully-charged state
   is green.
 - The greeter keeps its own copy of the status icons. Re-run `gdm-login-parity/install.sh` to
-  carry this change to the login screen.
+  carry this change to the login screen. That re-run first exposed a copy bug in the overlay; see
+  [`2026-11-25-gdm-icon-overlay-symlinks.md`](2026-11-25-gdm-icon-overlay-symlinks.md).

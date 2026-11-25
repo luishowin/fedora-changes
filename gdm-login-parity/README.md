@@ -136,7 +136,8 @@ sets `[org/gnome/login-screen] logo=''`.
 ```
 
 It checks the extension, both wallpaper copies, the cursor theme, the
-generated `WhiteSur-GDM` icon theme, the 441 × 44 px / 80 px layout tokens in
+generated `WhiteSur-GDM` icon theme (status icons are compared byte-for-byte
+with the home theme), the 441 × 44 px / 80 px layout tokens in
 the CSS/JS, and the greeter dconf values using a **system-only** dconf profile.
 
 Log out and back in after installing. The greeter is started fresh at logout;
@@ -189,6 +190,14 @@ directories, then overlays `WhiteSur-System-Status-Custom/status/symbolic` so
 the home bar's exact padded status artwork is used. The theme inherits Adwaita
 for anything outside the top bar, and the gdm profile sets
 `icon-theme='WhiteSur-GDM'`.
+
+WhiteSur ships many status names as **alias symlinks** (for example
+`battery-full-charged-symbolic.svg -> battery-full-symbolic.svg`). The overlay
+must replace those links, not write through them: `cp -a` follows an existing
+destination symlink, which lands the artwork in the link target and corrupts
+the file belonging to another name. `install.sh` therefore copies with
+`--remove-destination`, and `verify.sh` rejects any custom status icon that is
+still a symlink and compares the rest with the home theme byte-for-byte.
 
 The home top bar uses a 23 px icon size via Just Perfection. This package
 currently changes only the **icon theme** in GDM; GDM's default panel icon
